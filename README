@@ -1,0 +1,74 @@
+                                  pam_aklog
+                     AKLOG Pluggable Authentication Module
+                                 version 1.0
+
+                                Charles Clancy
+                          mgrtcc@cs.rose-hulman.edu
+                      Rose-Hulman Institute of Technology
+                        Department of Computer Science
+
+
+Purpose:
+
+  When using AFS and Kerberos together, the login process is as follows:
+    1. Run kinit to get a Kerberos TGT
+    2. Run aklog to use your TGT to get an AFS token
+    3. Now you can access the AFS file system
+
+  Since the Kerberos PAM is available to do step #1 (obtain TGT) it sure
+  would be nice if something automatically did step #2.  You can put aklog
+  in your login script, but that doesn't work for services that don't run 
+  a login script but still need to access AFS (such as FTP, or an IMAP 
+  server that stores mailboxes in AFS space).  The goal of pam_aklog is to 
+  provide that extra layer by having PAM grab the AFS token.  That way, 
+  anyone currently using PAM to do the kinit can easily integrate the 
+  aklog part of the process.
+
+
+Installation:
+
+  Very simple:
+
+    tar xfvz pam-aklog-1.0.tar.gz
+    cd pam-aklog-1.0
+    make
+    make install
+
+  Updates to config files:
+
+    1. For systems that use /etc/pam.conf (Solaris, et al)
+       Add the following line to /etc/pam.conf:
+       service session optional /lib/security/pam_aklog.so /path/to/aklog
+
+    2. For systems that use /etc/pam.d (Redhat, et al)
+       Add the following line to /etc/pam.d/service:
+       session optional /lib/security/pam_aklog.so /path/to/aklog
+
+    '/path/to/aklog' is the full path of the aklog binary.  If none is 
+    specified, the module will assume /usr/afsws/bin/aklog.
+
+    '/etc/pam.d/service' and 'service' are all the services you would like 
+    to include aklog support for.
+
+Usage Notes:
+
+    This module can be used as either a session module or an authentication
+    module, to accomidate application that do not allocate a tty and run
+    session modules, such as SCP and Samba.
+
+Tested Systems:
+
+  I have tested the module on the following systems:
+    Sparc Solaris 8 (gcc 2.95.3)
+
+Technical Issues:
+
+  Unlike pam-openafs-session, this module links in the AFS libraries and
+  creates a new PAG for each login session.  As far as I can tell, this is
+  the only way to make it work with Solaris.  If you are running Linux,
+  I'm not sure how pam-aklog would work.  I'd recommend pam-openafs-session.
+
+Contact:
+
+  Please send all questions/suggestion/comments/complaints to:
+  Charles Clancy <mgrtcc@cs.rose-hulman.edu>
